@@ -26,10 +26,12 @@ minerID_array=[
 def start():
     # Miners Home Page
     if request.method=='POST':
-        if request.form['submit']=='vote':
+        # if request.form["submit"]== 'vote':
+        print(request.form["submit"])
+        if request.form["submit"] == "vote":
             return redirect(url_for('initial'))
         else:
-            return redirect(url_for('index'))
+            return render_template('index.html')
         # user=request.form["minerID"]
         # if user in minerID_array and request.form['submit']=='mine':
         #     return redirect(url_for('mine'))
@@ -59,11 +61,31 @@ def initial():
 @app.route('/<User>_repeat/<ID>')
 def control(User,ID):
     # CONTROL Reload and Back Reference After Vote
+    Reason = "Unknown Error"
     if ID not in vote_see_chain:
-        return render_template("failure.html",User=User,ID=ID, Reason="This VoterID does not exist")
+        Reason = "This VoterID does not exist"
+        # return redirect(url_for("fail_to_vote", name=User, vid = ID, rea = "This VoterID does not exist"))
+        # return render_template("failure.html",User=User,ID=ID, Reason="This VoterID does not exist")
     elif ID not in voterID_array:
-        return render_template("failure.html",User=User,ID=ID, Reason="You have already voted once")
-    return render_template("failure.html",User=User,ID=ID, Reason="Unknown Error")
+        Reason = "You have already voted once"
+        # return redirect(url_for("fail_to_vote", name=User, vid = ID, rea = "You have already voted once"))
+        # return render_template("failure.html",User=User,ID=ID, Reason="You have already voted once")
+    print(User, ID, Reason)
+    # return redirect(url_for("control", User=User, ID=ID))
+    # return redirect(url_for("fail_to_vote", User=User, ID=ID, Reason=Reason))
+    return render_template("failure.html",User=User,ID=ID, Reason=Reason)
+
+@app.route('/put_vote/failure', methods=['GET','POST'])
+def fail_to_vote(User, ID, Reason):
+# def fail_to_vote(User = "USER", ID = "000", Reason = "Unknown Error"):
+    print(User, ID, Reason)
+    if request.method=='POST':
+        if request.args.get("Failure", False) == "OK":
+            # render_template('index.html')
+            redirect_url = request.referrer or '/'
+            return redirect(redirect_url)
+    else:
+        return render_template("failure.html", User=User, ID=ID, Reason=Reason)
 
 @app.route('/put_vote/<name>',methods=['POST','GET'])
 def put_vote(name):
@@ -71,14 +93,27 @@ def put_vote(name):
     if request.method=='POST'and name in voterID_array:
         voterID_array.remove(name)
         option=request.form['vote']
-
+        # print(name)
         return redirect(url_for("vote_done", name = name))
     else:
         return render_template("fillup.html")
 
 @app.route('/put_vote/<name>/success', methods=['GET','POST'])
 def vote_done(name):
-    return render_template("success.html")
+    if request.method=='POST':
+        if request.args.get("Success", False) == "OK":
+            # render_template('index.html')
+            redirect_url = request.referrer or '/'
+            return redirect(redirect_url)
+        # user=request.form["minerID"]
+        # if user in minerID_array and request.form['submit']=='mine':
+        #     return redirect(url_for('mine'))
+        # if user in minerID_array and request.form['submit']=='vote':
+        #     return '<h3>A miner with Miner ID cannot vote</h3>'
+        # else:
+        #     return redirect(url_for("control",User="Miner",ID=user))
+    else:
+        return render_template("success.html", UserID = name)
 
 
 # The process of Mining
@@ -109,7 +144,7 @@ def mine():
 @app.route('/vote/new/<name>/<option>', methods=['GET','POST'])
 def new_transaction(name,option):
     if request.method=="POST":
-        """ values = request.get_json()
+        """values = request.get_json()
         # Check that the required fields are in the POST'ed data
         required = ['Party_A', 'Party_B'] """
         required=[name,option]

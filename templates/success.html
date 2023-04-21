@@ -74,7 +74,7 @@
         right: -5px;
     }
 
-    .modal-confirm .modal-footer {
+    .modal-footer {
         border: none;
         text-align: center;
         border-radius: 5px;
@@ -144,7 +144,7 @@
 
 
 <body>
-    <div class="modal-dialog modal-confirm">
+    <div class="modal-dialog modal-confirm" style="margin-top: 15rem">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="icon-box ib">
@@ -154,12 +154,12 @@
             </div>
             <div class="modal-body">
                 <p class="text-center">
-                    Voter Added Successfully. Check your email for detials.
+                    Vote by {{UserID}} added successfully. Check your email for detials.
                 </p>
             </div>
             <div class="modal-footer">
-                <form action="/" method="post">
-                    <button type="submit" class="btn bn button btn-success btn-block" data-dismiss="modal">
+                <form action="/" method="get" style="margin-right: 3rem;">
+                    <button type="submit" name = "Success" value="OK" class="btn bn button btn-success btn-block" data-dismiss="modal">
                         OK
                     </button>
                 </form>
