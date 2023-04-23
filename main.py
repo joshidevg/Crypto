@@ -1,5 +1,4 @@
-
-from flask import Flask, jsonify, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for
 from backend import Blockchain
 import json
 
@@ -30,6 +29,12 @@ def start():
         print(request.form["submit"])
         if request.form["submit"] == "vote":
             return redirect(url_for('initial'))
+        if request.form["submit"] == "mine":
+            return redirect(url_for('get_miner'))
+        if request.form["submit"] == "newVoter":
+            return render_template('newVoter.html')
+        if request.form["submit"] == "result":
+            return redirect(url_for('full_chain'))
         else:
             return render_template('index.html')
         # user=request.form["minerID"]
@@ -58,34 +63,22 @@ def initial():
         return render_template('initial.html')
 
 
-@app.route('/<User>_repeat/<ID>')
+@app.route('/<User>_failure/<ID>')
 def control(User,ID):
-    # CONTROL Reload and Back Reference After Vote
+    # render the failure page
     Reason = "Unknown Error"
-    if ID not in vote_see_chain:
-        Reason = "This VoterID does not exist"
+    if ID not in vote_see_chain and ID not in minerID_array:
+        Reason = "This "+User+"ID does not exist"
         # return redirect(url_for("fail_to_vote", name=User, vid = ID, rea = "This VoterID does not exist"))
         # return render_template("failure.html",User=User,ID=ID, Reason="This VoterID does not exist")
-    elif ID not in voterID_array:
+    elif ID not in voterID_array and ID not in minerID_array:
         Reason = "You have already voted once"
         # return redirect(url_for("fail_to_vote", name=User, vid = ID, rea = "You have already voted once"))
         # return render_template("failure.html",User=User,ID=ID, Reason="You have already voted once")
-    print(User, ID, Reason)
+    # print(User, ID, Reason)
     # return redirect(url_for("control", User=User, ID=ID))
     # return redirect(url_for("fail_to_vote", User=User, ID=ID, Reason=Reason))
     return render_template("failure.html",User=User,ID=ID, Reason=Reason)
-
-@app.route('/put_vote/failure', methods=['GET','POST'])
-def fail_to_vote(User, ID, Reason):
-# def fail_to_vote(User = "USER", ID = "000", Reason = "Unknown Error"):
-    print(User, ID, Reason)
-    if request.method=='POST':
-        if request.args.get("Failure", False) == "OK":
-            # render_template('index.html')
-            redirect_url = request.referrer or '/'
-            return redirect(redirect_url)
-    else:
-        return render_template("failure.html", User=User, ID=ID, Reason=Reason)
 
 @app.route('/put_vote/<name>',methods=['POST','GET'])
 def put_vote(name):
@@ -93,7 +86,17 @@ def put_vote(name):
     if request.method=='POST'and name in voterID_array:
         voterID_array.remove(name)
         option=request.form['vote']
-        # print(name)
+        print(blockchain.chain)
+        index = blockchain.new_transaction(name, option)
+        print(index)
+        # data = {
+        #     'message': f'Transaction(The vote) will be added to Block {index}'},
+        # response = app.response_class(
+        #     response = json.dumps(data,indent=2),
+        #     status = 201,
+        #     mimetype = 'application/json'
+        # )
+        # return response
         return redirect(url_for("vote_done", name = name))
     else:
         return render_template("fillup.html")
@@ -119,7 +122,7 @@ def vote_done(name):
 # The process of Mining
 # This takes up the transactions done recently 
 # and put all into a block and append to the chain
-@app.route('/mine/', methods=['GET'])
+@app.route('/mine/', methods=['GET', 'POST'])
 def mine():
     last_block = blockchain.last_block
     last_proof = last_block['proof']
@@ -140,37 +143,53 @@ def mine():
     )
     return response
 
-# New Votes are done here
-@app.route('/vote/new/<name>/<option>', methods=['GET','POST'])
-def new_transaction(name,option):
-    if request.method=="POST":
-        """values = request.get_json()
-        # Check that the required fields are in the POST'ed data
-        required = ['Party_A', 'Party_B'] """
-        required=[name,option]
 
-        # Part_A is the nominee participating in the elections
-        # Party_B is the voter who votes
-        if not all(k in values for k in required):
-            return 'Missing values', 400
-
-        # Create a new Transaction
-        """ name=values['Party_B']
-        option=values['Party_A'] """
-    if name not in vote_check:
-        return redirect(url_for("control",User="Voter",ID=name))
+@app.route('/miner_login/', methods=['GET', 'POST'])
+def get_miner():
+    if request.method=='POST':
+        user=request.form["MinerID"]
+        # if user in vote_see_chain and request.form["submit"]=='see_chain':
+        #     return redirect(url_for('full_chain'))
+        print("user = "+str(user))
+        print(user in minerID_array)
+        if user in minerID_array and request.form["submit"]=='newMine' and request.form["confirm"] == "Confirm":
+            return redirect(url_for("mine"))
+        else:
+            return redirect(url_for("control",User="Miner",ID=user))
     else:
-        vote_check.remove(name)
+        return render_template('mine.html')
 
-    index = blockchain.new_transaction(name, option)
-    data = {
-        'message': f'Transaction(The vote) will be added to Block {index}'}
-    response = app.response_class(
-        response = json.dumps(data,indent=2),
-        status = 201,
-        mimetype = 'application/json'
-    )
-    return response
+# # New Votes are done here
+# @app.route('/vote/new/<name>/<option>', methods=['GET','POST'])
+# def new_transaction(name,option):
+#     if request.method=="POST":
+#         """values = request.get_json()
+#         # Check that the required fields are in the POST'ed data
+#         required = ['Party_A', 'Party_B'] """
+#         required=[name,option]
+
+#         # Part_A is the nominee participating in the elections
+#         # Party_B is the voter who votes
+#         if not all(k in values for k in required):
+#             return 'Missing values', 400
+
+#         # Create a new Transaction
+#         """ name=values['Party_B']
+#         option=values['Party_A'] """
+#     if name not in vote_check:
+#         return redirect(url_for("control",User="Voter",ID=name))
+#     else:
+#         vote_check.remove(name)
+
+#     index = blockchain.new_transaction(name, option)
+#     data = {
+#         'message': f'Transaction(The vote) will be added to Block {index}'}
+#     response = app.response_class(
+#         response = json.dumps(data,indent=2),
+#         status = 201,
+#         mimetype = 'application/json'
+#     )
+#     return response
 
 @app.route('/chain/', methods=['GET'])
 def full_chain():
