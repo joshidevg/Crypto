@@ -1,52 +1,37 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Apr 16 16:51:15 2023
+import numpy as np
 
-@author: Dell
-"""
+voterID_array = {'VOID001': 1, 'VOID002': 1, 'VOID003': 1,
+                 'VOID004': 1, 'VOID005': 1, 'VOID006': 1,
+                 'VOID007': 1, 'VOID008': 1, 'VOID009': 1}
 
-voterID_array=[
-        'VOID001','VOID002','VOID003',
-        'VOID004','VOID005','VOID006',
-        'VOID007','VOID008','VOID009',
-        'VOID010','VOID011','VOID012',
-        'VOID013','VOID014','VOID015']
-
-vote_see_chain=voterID_array.copy()
-vote_check=voterID_array.copy()
 minerID_array=['MOID001','MOID002','MOID003']
 
+# print(voterID_array['VOID010'])
+
 def add_voter_id(voter_id,voter_password):
-    if(voter_id==voter_password):
-        voterID_array.append(voter_id)
-        return 1
+    if(voter_id != voter_password):
+        return -1 # on webpage,it should show a message that Invalid Voter ID or password
     else:
-        return 0 # on webpage,it should show a message that Invalid Voter ID or password
-        
+        if voter_id not in voterID_array:
+            voterID_array[voter_id] = 1
+            return 1 #on webpage, it should show success
+        else:
+            return 0 #on webpage, it should show that the voterID already exists
+
 def remove_voter_id(voter_id,voter_password):
     if(voter_id not in voterID_array):
         return -1 # indicates that voterID is not currently registered in the system
     elif(voter_id!=voter_password):
-        return 0;# indicates that invalid credentials have been entered 
+        return 0; # indicates that invalid credentials have been entered 
     else:
-        voterID_array.remove(voter_id)
-        return 1; # indicates that voterID removed successfully from voerID array
+        del(voterID_array[voter_id])
+        return 1; # indicates that voterID removed successfully from voterID array
 
-def add_miner_id(miner_id,miner_password):
-    if(miner_id==miner_password):
-        minerID_array.append(miner_id)
-        return 1
-    else:
-        return 0 # on webpage,it should show a message that Invalid Voter ID or password
-        
-def remove_miner_id(miner_id,miner_password):
-    if(miner_id not in minerID_array):
+def find_voter_id(voter_id):
+    if(voter_id not in voterID_array):
         return -1 # indicates that voterID is not currently registered in the system
-    elif(miner_id!=miner_password):
-        return 0;# indicates that invalid credentials have been entered 
     else:
-        minerID_array.remove(miner_id)
-        return 1; # indicates that voterID removed successfully from voerID array
+        return voterID_array[voter_id]  # 0 = voted, 1 = not yet voted
 
 def show_current_voters():
     return voterID_array
