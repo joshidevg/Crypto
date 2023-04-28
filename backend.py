@@ -49,7 +49,7 @@ class Blockchain:
         for node in neighbours:
             # node stands for different centers of voting i.e, Polling centers
             # Polling centers are nothing but voter's vote input system
-            response = requests.get(f'http://{node}/chain')
+            response = requests.get(f'http://{node}/chain', timeout= 5000)
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
