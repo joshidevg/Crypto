@@ -60,10 +60,6 @@ def start():
             return redirect(url_for('initial'))
         if request.form["submit"] == "mine":
             return redirect(url_for('get_miner'))
-        if request.form["submit"] == "newVoter":
-            return render_template('newVoter.html')
-        if request.form["submit"] == "result":
-            return redirect(url_for('full_chain'))
         else:
             return render_template('index.html')
     else:
@@ -177,6 +173,36 @@ def full_chain():
     )
     return response
 
+@app.route('/admin', methods = ['GET', 'POST'])
+def admin():
+    '''function to render the admin page'''
+    if request.method=='POST':
+        print(request.form["submit"])
+        if request.form["submit"] == "newVoter":
+            return redirect(url_for("newvoter"))
+        if request.form["submit"] == "result":
+            return redirect(url_for('full_chain'))
+        else:
+            return render_template('admin.html')
+    else:
+        return render_template('admin.html')
+
+@app.route('/newvoter', methods = ['GET', 'POST'])
+def newvoter():
+    '''function to add voter to backend'''
+    if request.method=='POST':
+        user=request.form["voterId"]
+        print(user)
+        idstat = add_voter_id(user, user)
+        print(idstat)
+        if idstat != 1:
+            print("Already Exists")
+            return render_template("failure.html",User="voter",ID=user, reason="ID already exists")
+        else:
+            print("Added successfuly")
+            return render_template("success.html", UserID=user)
+    else:
+        return render_template('newVoter.html')
 
 
 if __name__ == '__main__':
