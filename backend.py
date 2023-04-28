@@ -85,7 +85,7 @@ class Blockchain:
         self.current_transactions.append({
             # Part_A is the nominee participating in the elections
             # Party_B is the voter who votes
-            'Party_A': Party_A,
+            'Party_A': hash(Party_A),
             'Party_B': Party_B,
             'Votes': 1
             })
