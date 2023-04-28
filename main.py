@@ -75,12 +75,12 @@ def initial():
             and request.form["confirm"] == "Confirm":
             return redirect(url_for("put_vote",name=user))
         else:
-            return redirect(url_for("control",User="Voter",ID=user))
+            return redirect(url_for("control",user="Voter",id1=user))
     else:
         return render_template('initial.html')
 
 
-@app.route('/<User>_failure/<ID>')
+@app.route('/<user>_failure/<id1>')
 def control(user,id1):
     '''function to renger the failure page'''
     reason = "Unknown Error"
