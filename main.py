@@ -19,29 +19,25 @@ def add_voter_id(voter_id,voter_password):
     '''function to add voter id'''
     if voter_id != voter_password:
         return -1 # on webpage,it should show a message that Invalid Voter ID or password
-    else:
-        if voter_id not in voterID_array:
-            voterID_array[voter_id] = 1
-            return 1 #on webpage, it should show success
-        else:
-            return 0 #on webpage, it should show that the voterID already exists
+    if voter_id not in voterID_array:
+        voterID_array[voter_id] = 1
+        return 1 #on webpage, it should show success
+    return 0 #on webpage, it should show that the voterID already exists
 
 def remove_voter_id(voter_id,voter_password):
     '''function to remove voter id (not used)'''
     if voter_id not in voterID_array:
         return -1 # indicates that voterID is not currently registered in the system
-    elif voter_id!=voter_password:
+    if voter_id!=voter_password:
         return 0 # indicates that invalid credentials have been entered
-    else:
-        del voterID_array[voter_id]
-        return 1 # indicates that voterID removed successfully from voterID array
+    del voterID_array[voter_id]
+    return 1 # indicates that voterID removed successfully from voterID array
 
 def find_voter_id(voter_id):
     '''function to get the status of voter'''
     if voter_id not in voterID_array:
         return -1 # indicates that voterID is not currently registered in the system
-    else:
-        return voterID_array[voter_id]  # 0 = voted, 1 = not yet voted
+    return voterID_array[voter_id]  # 0 = voted, 1 = not yet voted
 
 def show_current_voters():
     '''returns voter dictionary'''
@@ -60,10 +56,8 @@ def start():
             return redirect(url_for('initial'))
         if request.form["submit"] == "mine":
             return redirect(url_for('get_miner'))
-        else:
-            return render_template('index.html')
-    else:
         return render_template('index.html')
+    return render_template('index.html')
 
 @app.route('/voter',methods=['POST','GET'])
 def initial():
@@ -74,10 +68,8 @@ def initial():
         if (idstat == 1) and request.form["submit"]=='new_vote' \
             and request.form["confirm"] == "Confirm":
             return redirect(url_for("put_vote",name=user))
-        else:
-            return redirect(url_for("control",user="Voter",id1=user))
-    else:
-        return render_template('initial.html')
+        return redirect(url_for("control",user="Voter",id1=user))
+    return render_template('initial.html')
 
 
 @app.route('/<user>_failure/<id1>')
@@ -100,11 +92,10 @@ def put_vote(name):
         voterID_array[name] = 0
         option=request.form['vote']
         print(blockchain.chain)
-        index = blockchain.new_transaction(name, option)
+        index = blockchain.append_transaction(name, option)
         print(index)
         return redirect(url_for("vote_done", name = name))
-    else:
-        return render_template("fillup.html")
+    return render_template("fillup.html")
 
 @app.route('/put_vote/<name>/success', methods=['GET','POST'])
 def vote_done(name):
@@ -114,8 +105,7 @@ def vote_done(name):
             # render_template('index.html')
             redirect_url = request.referrer or '/'
             return redirect(redirect_url)
-    else:
-        return render_template("success.html", UserID = name)
+    return render_template("success.html", UserID = name)
 
 @app.route('/mine/', methods=['GET', 'POST'])
 def mine():
@@ -124,7 +114,7 @@ def mine():
     last_proof = last_block['proof']
     proof = blockchain.proof_of_work(last_proof)
 
-    block = blockchain.new_block(proof)
+    block = blockchain.create_block(proof)
     data = {
         'message': "New Block Mined",
         'index': block['index'],
@@ -152,25 +142,28 @@ def get_miner():
             # print(user)
             # print(user in minerID_array)
             return redirect(url_for("mine"))
-        else:
-            # print(user in minerID_array)
-            return redirect(url_for("control",User="Miner",ID=user))
-    else:
-        return render_template('mine.html')
+        # print(user in minerID_array)
+        return redirect(url_for("control",user="Miner",id1=user))
+    return render_template('mine.html')
 
 @app.route('/chain/', methods=['GET'])
 def full_chain():
     '''function to see the full chain'''
-    # Displays the whole block chain
+    isvalid = blockchain.resolve_conflicts()
     data = {
         'chain': blockchain.chain,
         'length': len(blockchain.chain),
         }
-    response = app.response_class(
-        response = json.dumps(data,indent=2),
-        status = 200,
-        mimetype = 'application/json'
-    )
+    if isvalid:
+        response = app.response_class(
+            response = json.dumps(data,indent=2),
+            status = 200,
+            mimetype = 'application/json'
+        )
+    else:
+        response = app.response_class(
+            response = 'Data has been tampered with'
+        )
     return response
 
 @app.route('/admin', methods = ['GET', 'POST'])
@@ -182,10 +175,8 @@ def admin():
             return redirect(url_for("newvoter"))
         if request.form["submit"] == "result":
             return redirect(url_for('full_chain'))
-        else:
-            return render_template('admin.html')
-    else:
         return render_template('admin.html')
+    return render_template('admin.html')
 
 @app.route('/newvoter', methods = ['GET', 'POST'])
 def newvoter():
@@ -198,11 +189,9 @@ def newvoter():
         if idstat != 1:
             print("Already Exists")
             return render_template("failure.html",User="voter",ID=user, reason="ID already exists")
-        else:
-            print("Added successfuly")
-            return render_template("success.html", UserID=user)
-    else:
-        return render_template('newVoter.html')
+        print("Added successfuly")
+        return render_template("success.html", UserID=user)
+    return render_template('newVoter.html')
 
 
 if __name__ == '__main__':
